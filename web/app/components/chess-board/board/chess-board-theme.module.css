@@ -1,0 +1,9 @@
+.classicGreen {
+  --board-frame: #171614;
+  --light-square: #eeeed2;
+  --dark-square: #769656;
+  --last-move: rgba(246, 246, 105, 0.46);
+  --selected-square: rgba(246, 246, 105, 0.72);
+  --legal-target: rgba(42, 42, 36, 0.28);
+  --capture-target: rgba(42, 42, 36, 0.34);
+}
