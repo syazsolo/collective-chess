@@ -1,0 +1,11 @@
+# Editor
+
+.vscode/
+
+## GitNexus local code index
+.gitnexus/
+
+## GitNexus-generated local assistant context
+.claude/
+AGENTS.md
+CLAUDE.md
