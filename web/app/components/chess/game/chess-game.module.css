@@ -1,0 +1,11 @@
+.game {
+  display: grid;
+  gap: 12px;
+  width: min(96vw, 86svh, 760px);
+}
+
+@media (max-width: 520px) {
+  .game {
+    width: min(96vw, 640px);
+  }
+}

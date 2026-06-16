@@ -1,6 +1,6 @@
 .surface {
   display: grid;
-  width: min(96vw, 86svh, 760px);
+  width: 100%;
 }
 
 .board {
@@ -149,10 +149,6 @@
 }
 
 @media (max-width: 520px) {
-  .surface {
-    width: min(96vw, 640px);
-  }
-
   .board {
     border-width: 4px;
   }

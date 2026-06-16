@@ -1,0 +1,78 @@
+.navigation {
+  align-items: center;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+}
+
+.button {
+  align-items: center;
+  background: #34302b;
+  border: 1px solid rgba(244, 241, 234, 0.14);
+  border-radius: 7px;
+  color: #f4f1ea;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 0.95rem;
+  font-weight: 700;
+  gap: 8px;
+  justify-content: center;
+  line-height: 1;
+  min-block-size: 42px;
+  min-inline-size: 0;
+  padding: 0 14px;
+  transition:
+    background 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease,
+    transform 140ms ease;
+}
+
+.button:hover:not(:disabled) {
+  background: #3f3932;
+  border-color: rgba(244, 241, 234, 0.24);
+}
+
+.button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.button:disabled {
+  color: rgba(244, 241, 234, 0.34);
+  cursor: not-allowed;
+}
+
+.button:focus-visible {
+  outline: 3px solid rgba(244, 210, 121, 0.9);
+  outline-offset: 2px;
+}
+
+.icon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.status {
+  color: rgba(244, 241, 234, 0.72);
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-align: center;
+  white-space: nowrap;
+}
+
+@media (max-width: 520px) {
+  .navigation {
+    gap: 8px;
+  }
+
+  .button {
+    font-size: 0.9rem;
+    min-block-size: 40px;
+    padding: 0 12px;
+  }
+
+  .status {
+    font-size: 0.8rem;
+  }
+}

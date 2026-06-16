@@ -1,62 +1,46 @@
 "use client";
 
-import { type CSSProperties, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
+import { Chess, type Piece, type Square } from "chess.js";
+import { ChessPiece } from "../pieces/chess-piece";
 import {
-  Chess,
-  type Color,
-  type Move,
-  type Piece,
-  type PieceSymbol,
-  type Square,
-} from "chess.js";
-import { files, getSquare, getSquareColor, ranks } from "./board/board-geometry";
-import { BoardSquare } from "./board/board-square";
-import styles from "./board/chess-board.module.css";
-import theme from "./board/chess-board-theme.module.css";
-import { ChessPiece } from "./pieces/chess-piece";
+  getSquare,
+  getSquareColor,
+  visualFiles,
+  visualRanks,
+} from "./board-geometry";
+import { BoardSquare } from "./board-square";
+import styles from "./chess-board.module.css";
+import theme from "./chess-board-theme.module.css";
+import { tryCreateBoardMove } from "./move-utils";
+import { getPieceAnimationStyle } from "./piece-animation";
+import type { ChessBoardProps, SelectedSquare } from "./types";
+import { usePieceNavigationAnimation } from "./use-piece-navigation-animation";
 
-type PieceAnimation = {
-  color: Color;
-  from: Square;
-  id: number;
-  to: Square;
-  type: PieceSymbol;
-};
-
-function getPromotion(
-  piece: Piece | undefined,
-  target: Square,
-): PieceSymbol | undefined {
-  if (piece?.type !== "p") {
-    return undefined;
-  }
-
-  return target.endsWith("8") || target.endsWith("1") ? "q" : undefined;
-}
-
-export function ChessBoard() {
-  const animationIdRef = useRef(0);
-  const [fen, setFen] = useState(() => new Chess().fen());
-  const [selectedSquare, setSelectedSquare] = useState<Square | null>(null);
-  const [lastMove, setLastMove] = useState<Pick<Move, "from" | "to"> | null>(
-    null,
-  );
-  const [pieceAnimation, setPieceAnimation] = useState<PieceAnimation | null>(
+export function ChessBoard({ position, onMove }: ChessBoardProps) {
+  const { fen, lastMove, moveIndex } = position;
+  const [selectedSquare, setSelectedSquare] = useState<SelectedSquare | null>(
     null,
   );
 
   const game = useMemo(() => new Chess(fen), [fen]);
   const isGameOver = game.isGameOver();
-  const visualFiles = files;
-  const visualRanks = [...ranks].reverse();
+  const activeSelectedSquare =
+    selectedSquare?.fen === fen ? selectedSquare.square : null;
+  const { clearPieceAnimation, pieceAnimation } = usePieceNavigationAnimation({
+    fen,
+    game,
+    lastMove,
+    moveIndex,
+  });
 
   const legalMoves = useMemo(() => {
-    if (!selectedSquare) {
+    if (!activeSelectedSquare) {
       return [];
     }
 
-    return game.moves({ square: selectedSquare, verbose: true });
-  }, [game, selectedSquare]);
+    return game.moves({ square: activeSelectedSquare, verbose: true });
+  }, [game, activeSelectedSquare]);
 
   const legalTargets = useMemo(
     () => new Set(legalMoves.map((move) => move.to)),
@@ -70,51 +54,25 @@ export function ChessBoard() {
     [legalMoves],
   );
 
-  function getVisualPosition(square: Square) {
-    const file = square[0] as (typeof files)[number];
-    const rank = square[1] as (typeof ranks)[number];
-
-    return {
-      column: visualFiles.indexOf(file),
-      row: visualRanks.indexOf(rank),
-    };
-  }
-
   function commitMove(from: Square, to: Square) {
-    const nextGame = new Chess(fen);
-    const piece = nextGame.get(from);
+    const result = tryCreateBoardMove(fen, from, to);
 
-    try {
-      const move = nextGame.move({
-        from,
-        promotion: getPromotion(piece, to),
-        to,
-      });
-
-      setFen(nextGame.fen());
-      setLastMove({ from: move.from, to: move.to });
-      setSelectedSquare(null);
-      animationIdRef.current += 1;
-      setPieceAnimation({
-        color: move.color,
-        from: move.from,
-        id: animationIdRef.current,
-        to: move.to,
-        type: piece?.type ?? move.piece,
-      });
-      return true;
-    } catch {
+    if (!result) {
       return false;
     }
+
+    onMove(result.fen, result.move);
+    setSelectedSquare(null);
+    return true;
   }
 
   function handleSquareClick(square: Square, piece: Piece | undefined) {
-    if (selectedSquare && commitMove(selectedSquare, square)) {
+    if (activeSelectedSquare && commitMove(activeSelectedSquare, square)) {
       return;
     }
 
     if (piece?.color === game.turn()) {
-      setSelectedSquare(square);
+      setSelectedSquare({ fen, square });
       return;
     }
 
@@ -127,7 +85,7 @@ export function ChessBoard() {
   ) {
     event.dataTransfer.setData("text/plain", square);
     event.dataTransfer.effectAllowed = "move";
-    setSelectedSquare(square);
+    setSelectedSquare({ fen, square });
   }
 
   function handleDrop(
@@ -152,7 +110,7 @@ export function ChessBoard() {
           visualFiles.map((file) => {
             const square = getSquare(file, rank);
             const piece = game.get(square);
-            const isSelected = selectedSquare === square;
+            const isSelected = activeSelectedSquare === square;
             const isLastMove =
               lastMove?.from === square || lastMove?.to === square;
             const isLegalTarget = legalTargets.has(square);
@@ -191,16 +149,9 @@ export function ChessBoard() {
           <span
             aria-hidden="true"
             className={styles.animatedPiece}
-            key={pieceAnimation.id}
-            onAnimationEnd={() => setPieceAnimation(null)}
-            style={
-              {
-                "--from-column": getVisualPosition(pieceAnimation.from).column,
-                "--from-row": getVisualPosition(pieceAnimation.from).row,
-                "--to-column": getVisualPosition(pieceAnimation.to).column,
-                "--to-row": getVisualPosition(pieceAnimation.to).row,
-              } as CSSProperties
-            }
+            key={pieceAnimation.key}
+            onAnimationEnd={clearPieceAnimation}
+            style={getPieceAnimationStyle(pieceAnimation)}
           >
             <ChessPiece
               color={pieceAnimation.color}
