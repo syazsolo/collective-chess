@@ -1,67 +1,41 @@
 import { useEffect, useRef, useState } from "react";
-import type { Chess } from "chess.js";
-import {
-  createPieceAnimation,
-  type PieceAnimation,
-} from "./piece-animation";
-import type { ChessBoardPosition } from "./types";
+import { createPieceAnimation, type PieceAnimation } from "./piece-animation";
+import type { BoardTransition } from "./types";
 
-type UsePieceNavigationAnimationParams = ChessBoardPosition & {
-  game: Chess;
+type UsePieceNavigationAnimationParams = {
+  transition: BoardTransition;
 };
 
 export function usePieceNavigationAnimation({
-  fen,
-  game,
-  lastMove,
-  moveIndex,
+  transition,
 }: UsePieceNavigationAnimationParams) {
-  const [pieceAnimation, setPieceAnimation] =
-    useState<PieceAnimation | null>(null);
-  const previousRenderedPositionRef = useRef<ChessBoardPosition | null>(null);
+  const [pieceAnimation, setPieceAnimation] = useState<PieceAnimation | null>(
+    null,
+  );
+  const animationIdRef = useRef(0);
 
   useEffect(() => {
-    const previousPosition = previousRenderedPositionRef.current;
-    previousRenderedPositionRef.current = { fen, lastMove, moveIndex };
-
-    if (!previousPosition || previousPosition.fen === fen) {
-      return;
-    }
-
-    const moveIndexDelta = moveIndex - previousPosition.moveIndex;
-
-    if (Math.abs(moveIndexDelta) !== 1) {
+    if (!transition) {
       setPieceAnimation(null);
       return;
     }
 
-    const isForwardNavigation = moveIndexDelta > 0;
-    const move = isForwardNavigation ? lastMove : previousPosition.lastMove;
-
-    if (!move) {
-      setPieceAnimation(null);
-      return;
-    }
-
-    const from = isForwardNavigation ? move.from : move.to;
-    const to = isForwardNavigation ? move.to : move.from;
-    const piece = game.get(to);
+    animationIdRef.current += 1;
+    const animationId = animationIdRef.current;
 
     setPieceAnimation(
-      piece
-        ? createPieceAnimation({
-            color: piece.color,
-            fen,
-            from,
-            to,
-            type: piece.type,
-          })
-        : null,
+      createPieceAnimation({
+        animationId: String(animationId),
+        color: transition.color,
+        from: transition.from,
+        to: transition.to,
+        type: transition.type,
+      }),
     );
-  }, [fen, game, lastMove, moveIndex]);
+  }, [transition]);
 
   return {
     clearPieceAnimation: () => setPieceAnimation(null),
-    pieceAnimation: pieceAnimation?.fen === fen ? pieceAnimation : null,
+    pieceAnimation,
   };
 }

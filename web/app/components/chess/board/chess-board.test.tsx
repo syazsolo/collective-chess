@@ -4,7 +4,12 @@ import { Chess } from "chess.js";
 import { describe, expect, test, vi } from "vitest";
 import { ChessBoard } from "./chess-board";
 import styles from "./chess-board.module.css";
-import type { BoardMove, BoardNavigationMove, ChessBoardProps } from "./types";
+import type {
+  BoardMove,
+  BoardNavigationMove,
+  BoardTransition,
+  ChessBoardProps,
+} from "./types";
 
 function createMoveHandler() {
   return vi.fn<(fen: string, move: BoardMove) => void>();
@@ -13,17 +18,18 @@ function createMoveHandler() {
 function renderBoard({
   fen = new Chess().fen(),
   lastMove = null,
-  moveIndex = 0,
+  transition = null,
   onMove = createMoveHandler(),
 }: {
   fen?: string;
   lastMove?: BoardNavigationMove | null;
-  moveIndex?: number;
+  transition?: BoardTransition;
   onMove?: ChessBoardProps["onMove"];
 } = {}) {
   render(
     <ChessBoard
-      position={{ fen, lastMove, moveIndex }}
+      position={{ fen, lastMove }}
+      transition={transition}
       onMove={onMove}
     />,
   );
@@ -33,7 +39,9 @@ function renderBoard({
 
 async function clickSquare(square: string) {
   const user = userEvent.setup();
-  await user.click(screen.getByRole("gridcell", { name: new RegExp(`^${square}`) }));
+  await user.click(
+    screen.getByRole("gridcell", { name: new RegExp(`^${square}`) }),
+  );
 }
 
 function dragPiece(from: string, to: string) {
@@ -57,8 +65,9 @@ describe("ChessBoard", () => {
   test("renders pieces from the provided FEN", () => {
     renderBoard();
 
-    expect(screen.getByRole("gridcell", { name: "e2 white p" }))
-      .toBeInTheDocument();
+    expect(
+      screen.getByRole("gridcell", { name: "e2 white p" }),
+    ).toBeInTheDocument();
     expect(screen.getByRole("gridcell", { name: "e4" })).toBeInTheDocument();
   });
 
@@ -108,7 +117,7 @@ describe("ChessBoard", () => {
     game.move("e4");
     game.move("e5");
     const onMove = createMoveHandler();
-    renderBoard({ fen: game.fen(), moveIndex: 2, onMove });
+    renderBoard({ fen: game.fen(), onMove });
 
     await clickSquare("d2");
     await clickSquare("d4");
@@ -122,7 +131,7 @@ describe("ChessBoard", () => {
     game.move("e4");
     game.move("e5");
     const onMove = createMoveHandler();
-    renderBoard({ fen: game.fen(), moveIndex: 2, onMove });
+    renderBoard({ fen: game.fen(), onMove });
 
     await clickSquare("e5");
     await clickSquare("e4");
@@ -133,12 +142,13 @@ describe("ChessBoard", () => {
   test("marks the last move squares for the displayed position", () => {
     renderBoard({
       lastMove: { from: "e7", to: "e5" },
-      moveIndex: 2,
     });
 
-    expect(screen.getByRole("gridcell", { name: /^e7/ }))
-      .toHaveClass(styles.lastMoveSquare);
-    expect(screen.getByRole("gridcell", { name: /^e5/ }))
-      .toHaveClass(styles.lastMoveSquare);
+    expect(screen.getByRole("gridcell", { name: /^e7/ })).toHaveClass(
+      styles.lastMoveSquare,
+    );
+    expect(screen.getByRole("gridcell", { name: /^e5/ })).toHaveClass(
+      styles.lastMoveSquare,
+    );
   });
 });

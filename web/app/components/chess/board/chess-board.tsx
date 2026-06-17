@@ -17,8 +17,8 @@ import { getPieceAnimationStyle } from "./piece-animation";
 import type { ChessBoardProps, SelectedSquare } from "./types";
 import { usePieceNavigationAnimation } from "./use-piece-navigation-animation";
 
-export function ChessBoard({ position, onMove }: ChessBoardProps) {
-  const { fen, lastMove, moveIndex } = position;
+export function ChessBoard({ position, transition, onMove }: ChessBoardProps) {
+  const { fen, lastMove } = position;
   const [selectedSquare, setSelectedSquare] = useState<SelectedSquare | null>(
     null,
   );
@@ -28,10 +28,7 @@ export function ChessBoard({ position, onMove }: ChessBoardProps) {
   const activeSelectedSquare =
     selectedSquare?.fen === fen ? selectedSquare.square : null;
   const { clearPieceAnimation, pieceAnimation } = usePieceNavigationAnimation({
-    fen,
-    game,
-    lastMove,
-    moveIndex,
+    transition,
   });
 
   const legalMoves = useMemo(() => {

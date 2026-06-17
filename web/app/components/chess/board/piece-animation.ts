@@ -4,7 +4,6 @@ import { getVisualPosition } from "./board-geometry";
 
 export type PieceAnimation = {
   color: Color;
-  fen: string;
   from: Square;
   key: string;
   to: Square;
@@ -12,17 +11,16 @@ export type PieceAnimation = {
 };
 
 export function createPieceAnimation({
+  animationId,
   color,
-  fen,
   from,
   to,
   type,
-}: Omit<PieceAnimation, "key">): PieceAnimation {
+}: Omit<PieceAnimation, "key"> & { animationId: string }): PieceAnimation {
   return {
     color,
-    fen,
     from,
-    key: `${fen}:${from}:${to}`,
+    key: `${animationId}:${from}:${to}`,
     to,
     type,
   };

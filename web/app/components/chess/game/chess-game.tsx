@@ -3,18 +3,19 @@
 import { useState } from "react";
 import { Chess } from "chess.js";
 import { ChessBoard } from "../board";
-import type { BoardMove, BoardNavigationMove } from "../board";
+import type { BoardMove, BoardTransition } from "../board";
 import { MoveNavigation } from "../controls/move-navigation";
 import styles from "./chess-game.module.css";
 
 type BoardPosition = {
   fen: string;
-  lastMove: BoardNavigationMove | null;
+  lastMove: BoardMove | null;
 };
 
 type BoardHistory = {
   positionIndex: number;
   positions: BoardPosition[];
+  transition: BoardTransition;
 };
 
 const initialPosition: BoardPosition = {
@@ -25,6 +26,7 @@ const initialPosition: BoardPosition = {
 const initialHistory: BoardHistory = {
   positionIndex: 0,
   positions: [initialPosition],
+  transition: null,
 };
 
 export function ChessGame() {
@@ -39,7 +41,12 @@ export function ChessGame() {
       const nextIndex = currentHistory.positionIndex + 1;
       const nextPosition = {
         fen,
-        lastMove: { from: move.from, to: move.to },
+        lastMove: {
+          color: move.color,
+          from: move.from,
+          piece: move.piece,
+          to: move.to,
+        },
       };
 
       return {
@@ -48,6 +55,12 @@ export function ChessGame() {
           ...currentHistory.positions.slice(0, nextIndex),
           nextPosition,
         ],
+        transition: {
+          color: move.color,
+          from: move.from,
+          to: move.to,
+          type: move.piece,
+        },
       };
     });
   }
@@ -60,9 +73,20 @@ export function ChessGame() {
         return currentHistory;
       }
 
+      const currentPosition =
+        currentHistory.positions[currentHistory.positionIndex];
+
       return {
         ...currentHistory,
         positionIndex: previousIndex,
+        transition: currentPosition.lastMove
+          ? {
+              color: currentPosition.lastMove.color,
+              from: currentPosition.lastMove.to,
+              to: currentPosition.lastMove.from,
+              type: currentPosition.lastMove.piece,
+            }
+          : null,
       };
     });
   }
@@ -78,9 +102,19 @@ export function ChessGame() {
         return currentHistory;
       }
 
+      const nextPosition = currentHistory.positions[nextIndex];
+
       return {
         ...currentHistory,
         positionIndex: nextIndex,
+        transition: nextPosition.lastMove
+          ? {
+              color: nextPosition.lastMove.color,
+              from: nextPosition.lastMove.from,
+              to: nextPosition.lastMove.to,
+              type: nextPosition.lastMove.piece,
+            }
+          : null,
       };
     });
   }
@@ -91,8 +125,8 @@ export function ChessGame() {
         position={{
           fen: activePosition.fen,
           lastMove: activePosition.lastMove,
-          moveIndex: history.positionIndex,
         }}
+        transition={history.transition}
         onMove={handleMove}
       />
       <MoveNavigation
