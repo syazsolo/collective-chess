@@ -98,8 +98,6 @@ export function ChessGame() {
       <MoveNavigation
         canMoveBack={canMoveBack}
         canMoveForward={canMoveForward}
-        currentPly={history.positionIndex}
-        lastPly={history.positions.length - 1}
         onBack={showPreviousMove}
         onForward={showNextMove}
       />

@@ -3,8 +3,6 @@ import styles from "./move-navigation.module.css";
 type MoveNavigationProps = {
   canMoveBack: boolean;
   canMoveForward: boolean;
-  currentPly: number;
-  lastPly: number;
   onBack: () => void;
   onForward: () => void;
 };
@@ -12,8 +10,6 @@ type MoveNavigationProps = {
 export function MoveNavigation({
   canMoveBack,
   canMoveForward,
-  currentPly,
-  lastPly,
   onBack,
   onForward,
 }: MoveNavigationProps) {
@@ -32,9 +28,6 @@ export function MoveNavigation({
         </span>
         <span>Back</span>
       </button>
-      <span className={styles.status} aria-live="polite">
-        Move {currentPly} / {lastPly}
-      </span>
       <button
         aria-label="Show next move"
         className={styles.button}
